@@ -1,22 +1,22 @@
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Gallery from './components/Gallery'
 import SearchBar from './components/SearchBar'
-import { DataContext } from './Contexts/DataContext'
-import AlbumView from './components/ArtistView'
+import AlbumView from './components/AlbumView'
 import ArtistView from './components/ArtistView'
+import { createResource as fetchData } from './helper'
+
 
 function App(){
     let [search, setSearch] = useState('')
     let [message, setMessage] = useState('Search for Music!')
-    let [data, setData] = useState([])
+    let [data, setData] = useState(null)
 
     useEffect(() => {
       const fetchData = async () => {
         const API_URI = `https://itunes.apple.com/search?term=${encodeURI(search)}`
         const response = await fetch(API_URI)
         const data = await response.json()
-        console.log(data)
         if (data.results.length > 0) {
           setData(data.results)
         } else {
@@ -24,7 +24,9 @@ function App(){
         }
       }
 
-      if (search) fetchData()
+      if (searchTerm) {
+        setData(fetchData(searchTerm))
+    }
     }, [search])
 
     const handleSearch = (e, term) => {
@@ -32,23 +34,24 @@ function App(){
       setSearch(term)
     }
 
-    return (
-        <div>
-            {message}
-            <Router>
-              <Routes>
-                <Route path='/' element={
-                  <Fragment>
-                    <SearchBar handleSearch={handleSearch} />
-                    <Gallery data={data} />
-                  </Fragment>
-                } />
-                <Route path='album/:id' element={<AlbumView />}/>
-                <Route path='artist/:id' element={<ArtistView />}/>
-              </Routes>
-            </Router>
-        </div>
-    )
-}
+    const renderGallery = () => {
+      if(data){
+          return (
+              <Suspense fallback={<h1>Loading...</h1>} >
+                  <Gallery data={data} />
+              </Suspense>
+          )
+      }
+  }
+  
 
+  return (
+    <div className="App">
+        <SearchBar handleSearch={handleSearch} />
+        {message}
+        {renderGallery()}
+    </div>
+)
+
+}  
 export default App

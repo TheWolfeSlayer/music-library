@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react'
 import GalleryItem from './GalleryItem'
 
-function Gallery({ data }) {
-    const display = data.map((item, i) => {
-        return <GalleryItem key={i} item={item} />
+const Gallery = (props) => {
+    const data = props.data.result.read()
+
+    const display = data.map((item, index) => {
+        return (
+            <GalleryItem item={item} key={index} />
+        )
     })
-    return(
+
+    return (
         <div>
             {display}
         </div>
     )
 }
+
 
 export default Gallery
